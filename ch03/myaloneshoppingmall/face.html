@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <!-- Webpage Title-->
+    <title>나홀로 쇼핑몰</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <link rel="shortcut icon" href="/static/images/favicon.png">
+    <!-- Bootstrap CSS-->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <!--JS-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <!-- 구글폰트 -->
+    <link href="https://fonts.googleapis.com/css?family=Stylish&amp;display=swap" rel="stylesheet">
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#orders-box').html('');
+            showExchange();
+            showOrders();
+        });
+
+        function order() {
+            let name = $('#order-name').val();
+            let count = $('#order-count').val();
+            let address = $('#order-address').val();
+            let phone = $('#order-phone').val();
+
+            if (name == '') {
+                alert('이름을 입력해주세요')
+                $('#order-name').focus()
+                return
+            } else if (count == '') {
+                alert('수량을 입력해주세요')
+                $('#order-count').focus()
+                return
+            } else if (address == '') {
+                alert('주소를 입력해주세요')
+                $('#order-address').focus()
+                return
+            } else if (phone == '') {
+                alert('휴대폰번호를 입력해주세요')
+                $('#order-phone').focus()
+                return
+            } else if (!isCellPhone(phone)) {
+                alert('휴대폰번호 입력 형식이 틀립니다. \n 010-0000-0000으로 입력해주세요')
+                return
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "/order",
+                data: {name_give: name, count_give: count, address_give: address, phone_give: phone},
+                success: function (response) {
+                    if (response['result'] == 'success') {
+                        alert('주문 완료!');
+                        window.location.reload();
+                    }
+                }
+            })
+        }
+
+        function isCellPhone(p) {
+            let regExp = /^(01[016789]{1}|02|0[3-9]{1}[0-9]{1})[-][0-9]{3,4}[-][0-9]{4}$/;
+            return regExp.test(p);
+        }
+
+        function showOrders() {
+            $.ajax({
+                type: "GET",
+                url: "/order",
+                data: {},
+                success: function (response) {
+                    if (response['result'] == 'success') {
+                        let orders = response['orders'];
+                        for (let i = 0; i < orders.length; i++) {
+                            makeOrderRow(orders[i]['name'], orders[i]['count'], orders[i]['address'], orders[i]['phone'])
+                        }
+                    } else {
+                        alert('주문을 받아오지 못했습니다');
+                    }
+                }
+            })
+        }
+
+        function makeOrderRow(name, count, address, phone) {
+            let tempHtml = `<tr>\
+                            <td>${name}</td>
+                            <td>${count}</td>
+                            <td>${address}</td>
+                            <td>${phone}</td>
+                          </tr>`;
+
+            $('#orders-box').append(tempHtml);
+        }
+
+        function showExchange() {
+            $.ajax({
+                type: "GET",
+                url: "https://api.manana.kr/exchange/rate.json",
+                data: {},
+                success: function (response) {
+                    for (let i = 0; i < response.length; i++) {
+                        if (response[i]['name'] == 'USDKRW=X') {
+                            $('#exchange').text(response[i]['rate']);
+                            return;
+                        }
+                    }
+
+                }
+            })
+        }
+    
+    </script>
+    <style type="text/css">
+        * {
+            font-family: 'Stylish', sans-serif;
+        }
+
+        h1, h5 {
+            display: inline;
+        }
+
+        .wrap {
+            width: 500px;
+            margin: auto;
+        }
+
+        .img {
+            background-image: url('https://www.conscious-skincare.com/wp-content/uploads/2016/02/glc-candle-lit-with-new-gift-box.jpg');
+            background-size: cover;
+            background-position: center;
+            width: 500px;
+            height: 300px;
+        }
+
+        .info {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .order {
+            text-align: center;
+        }
+
+        .orders {
+            margin-top: 100px;
+        }
+
+        .exchange-info {
+            color: blue;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="img"></div>
+        <div class="info">
+            <h1>양초를 팝니다</h1>
+            <h5>가격: 3,000 원 / 개</h5>
+            <p>이 양초는 사실 특별한 힘을 가지고 있어요. 양초를 켜고 소원을 빌면 짜자잔 뭐든지 이뤄지게 된답니다. 하나 사가세요! 대나무 향이 아주 좋아요</p>
+            <div class="exchange-info">달러-원 환율: <span id="exchange">1187.57</span></div>
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">주문자 이름</span>
+                </div>
+                <input type="text" class="form-control" id="order-name">
+            </div>
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <label class="input-group-text" for="order-count">수량</label>
+                </div>
+                <select class="custom-select" id="order-count">
+                    <option selected="" value=""> -- 수량을 선택하세요 --</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                </select>
+            </div>
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">주소</span>
+                </div>
+                <input type="text" class="form-control" id="order-address">
+            </div>
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">전화번호</span>
+                </div>
+                <input type="text" class="form-control" id="order-phone">
+            </div>
+            <div class="order">
+                <button onclick="order()" type="button" class="btn btn-primary">주문하기</button>
+            </div>
+        </div>
+        <div class="orders">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th scope="col">이름</th>
+                    <th scope="col">수량</th>
+                    <th scope="col">주소</th>
+                    <th scope="col">전화번호</th>
+                </tr>
+                </thead>
+                <tbody id="orders-box"><tr>                                <td>1</td>
+                            <td>2</td>
+                            <td>1</td>
+                            <td>010-0000-0000</td>
+                          </tr><tr>                                <td>ㅁㅁ</td>
+                            <td>1</td>
+                            <td>ㅁㄴㅇ</td>
+                            <td>010-0000-0000</td>
+                          </tr><tr>                                <td>숙제중ㅠ</td>
+                            <td>1</td>
+                            <td>어떻게 만드나</td>
+                            <td>010-1111-1111</td>
+                          </tr><tr>                                <td>sad</td>
+                            <td>1</td>
+                            <td>ad</td>
+                            <td>010-0000-0000</td>
+                          </tr><tr>                                <td>asdf</td>
+                            <td>2</td>
+                            <td>종로구 </td>
+                            <td>010-1234-5678</td>
+                          </tr><tr>                                <td>s</td>
+                            <td>1</td>
+                            <td>d</td>
+                            <td>010-0000-0000</td>
+                          </tr><tr>                                <td>rira</td>
+                            <td>1</td>
+                            <td>서울시 강동구</td>
+                            <td>011-829-9384</td>
+                          </tr><tr>                                <td>김</td>
+                            <td>1</td>
+                            <td>서울</td>
+                            <td>010-3330-9990</td>
+                          </tr><tr>                                <td>윤지혜</td>
+                            <td>1</td>
+                            <td>용산구</td>
+                            <td>010-9448-4619</td>
+                          </tr><tr>                                <td>ㅇㅁㅇㄴㄹ</td>
+                            <td>1</td>
+                            <td>ㅁㄴㅇㄹㅁㅇㄴㄹ</td>
+                            <td>010-4920-4508</td>
+                          </tr><tr>                                <td>2434</td>
+                            <td>1</td>
+                            <td>32424</td>
+                            <td>010-1515-5151</td>
+                          </tr><tr>                                <td>ㅎㅎㅎ</td>
+                            <td>3</td>
+                            <td>ㅎ</td>
+                            <td>010-7867-9870</td>
+                          </tr><tr>                                <td>ㅁㄴㅇ</td>
+                            <td>2</td>
+                            <td>서울</td>
+                            <td>010-1111-1111</td>
+                          </tr><tr>                                <td>dsf</td>
+                            <td>1</td>
+                            <td>sdf</td>
+                            <td>010-1111-1111</td>
+                          </tr><tr>                                <td>dd</td>
+                            <td>2</td>
+                            <td>sd</td>
+                            <td>010-0000-0000</td>
+                          </tr><tr>                                <td>f</td>
+                            <td>2</td>
+                            <td>e</td>
+                            <td>010-0000-0000</td>
+                          </tr><tr>                                <td>김민영</td>
+                            <td>1</td>
+                            <td>ㅇㅇㅇ</td>
+                            <td>010-7967-0000</td>
+                          </tr><tr>                                <td>임준범</td>
+                            <td>2</td>
+                            <td>모처</td>
+                            <td>010-6409-0105</td>
+                          </tr><tr>                                <td>손수정</td>
+                            <td>1</td>
+                            <td>모처2 </td>
+                            <td>010-6435-5219</td>
+                          </tr><tr>                                <td>문</td>
+                            <td>1</td>
+                            <td>ㅇㅁㄴㅇㅁ</td>
+                            <td>010-7897-0987</td>
+                          </tr><tr>                                <td>ㅉ</td>
+                            <td>1</td>
+                            <td>ㄸ</td>
+                            <td>010-0000-0000</td>
+                          </tr><tr>                                <td>32ㄱ</td>
+                            <td>1</td>
+                            <td>ㅈㄷㄱ</td>
+                            <td>010-1111-5555</td>
+                          </tr><tr>                                <td>장호철</td>
+                            <td>1</td>
+                            <td>서울시 강동구</td>
+                            <td>010-1234-7858</td>
+                          </tr><tr>                                <td>ㅇㅇㅇ</td>
+                            <td>2</td>
+                            <td>222</td>
+                            <td>010-9839-2982</td>
+                          </tr><tr>                                <td>`</td>
+                            <td>1</td>
+                            <td>`</td>
+                            <td>010-1111-1111</td>
+                          </tr><tr>                                <td>ㅇ</td>
+                            <td>1</td>
+                            <td>ㄴ</td>
+                            <td>010-2222-3333</td>
+                          </tr><tr>                                <td>asd</td>
+                            <td>2</td>
+                            <td>d</td>
+                            <td>010-231-1238</td>
+                          </tr><tr>                                <td>ㅁㅁㅁ</td>
+                            <td>1</td>
+                            <td>ㅁㅁㅁㅁ</td>
+                            <td>010-0000-0000</td>
+                          </tr><tr>                                <td>x</td>
+                            <td>1</td>
+                            <td>x</td>
+                            <td>010-0000-0000</td>
+                          </tr><tr>                                <td>가나다</td>
+                            <td>2</td>
+                            <td>ㅁㄴㅇㄹ</td>
+                            <td>010-2222-2222</td>
+                          </tr><tr>                                <td>sdf</td>
+                            <td>1</td>
+                            <td>sdfs</td>
+                            <td>010-9774-1368</td>
+                          </tr><tr>                                <td>sdf</td>
+                            <td>3</td>
+                            <td>asdf</td>
+                            <td>010-1111-1111</td>
+                          </tr><tr>                                <td>asd</td>
+                            <td>1</td>
+                            <td>asdasdd</td>
+                            <td>010-0100-1000</td>
+                          </tr><tr>                                <td>최서호</td>
+                            <td>1</td>
+                            <td>경기도</td>
+                            <td>010-405-1234</td>
+                          </tr><tr>                                <td>숙제는</td>
+                            <td>1</td>
+                            <td>하기가</td>
+                            <td>010-7575-7575</td>
+                          </tr><tr>                                <td>a</td>
+                            <td>2</td>
+                            <td>aaa</td>
+                            <td>010-5425-5041</td>
+                          </tr><tr>                                <td>가나다</td>
+                            <td>3</td>
+                            <td>가나다</td>
+                            <td>010-3949-3939</td>
+                          </tr><tr>                                <td>ㅁㅁㅁㅁㅁㅁㅁ</td>
+                            <td>1</td>
+                            <td>ㅁㅁㅁ</td>
+                            <td>010-1232-2342</td>
+                          </tr><tr>                                <td>ㅈ</td>
+                            <td>1</td>
+                            <td>ㅈ</td>
+                            <td>010-2345-6789</td>
+                          </tr><tr>                                <td>남남</td>
+                            <td>1</td>
+                            <td>남남시 나맘구 남남</td>
+                            <td>010-1111-1111</td>
+                          </tr><tr>                                <td>11</td>
+                            <td>1</td>
+                            <td>11</td>
+                            <td>010-3333-1211</td>
+                          </tr><tr>                                <td>xxx</td>
+                            <td>1</td>
+                            <td>xxx</td>
+                            <td>010-0000-0000</td>
+                          </tr><tr>                                <td>김석환</td>
+                            <td>2</td>
+                            <td>작은집 9층</td>
+                            <td>010-1234-1234</td>
+                          </tr><tr>                                <td>안해</td>
+                            <td>1</td>
+                            <td>ㅁㄴㅇㄹ</td>
+                            <td>010-0000-0000</td>
+                          </tr><tr>                                <td>sad</td>
+                            <td>1</td>
+                            <td>sad</td>
+                            <td>010-0000-0000</td>
+                          </tr><tr>                                <td>sad</td>
+                            <td>1</td>
+                            <td>sad</td>
+                            <td>010-0000-0000</td>
+                          </tr><tr>                                <td>ads</td>
+                            <td>2</td>
+                            <td>asd</td>
+                            <td>010-465-6666</td>
+                          </tr><tr>                                <td>1</td>
+                            <td>2</td>
+                            <td>1</td>
+                            <td>010-0000-0000</td>
+                          </tr><tr>                                <td>zcxzdc</td>
+                            <td>1</td>
+                            <td>sfdsfds</td>
+                            <td>010-0000-0000</td>
+                          </tr><tr>                                <td>sdaf</td>
+                            <td>1</td>
+                            <td>dsf</td>
+                            <td>010-4944-2324</td>
+                          </tr><tr>                                <td>helpme</td>
+                            <td>3</td>
+                            <td>6주차에 복습하기</td>
+                            <td>010-3333-0000</td>
+                          </tr><tr>                                <td>ㅇㅇㅇ</td>
+                            <td>2</td>
+                            <td>010-1234-4561</td>
+                            <td>010-1234-4561</td>
+                          </tr><tr>                                <td>ㅁㄴㅇㄹ</td>
+                            <td>2</td>
+                            <td>ㅁㄴㅇㄹ</td>
+                            <td>010-1234-1234</td>
+                          </tr><tr>                                <td>ㅁㄴㅇ</td>
+                            <td>3</td>
+                            <td>ㅁㄴㅇㅁㄴㅇ</td>
+                            <td>010-9999-8888</td>
+                          </tr><tr>                                <td>ㄹㄹ</td>
+                            <td>2</td>
+                            <td>ㄹ</td>
+                            <td>010-9240-8267</td>
+                          </tr><tr>                                <td>ㅇ</td>
+                            <td>2</td>
+                            <td>ㅇ</td>
+                            <td>010-4444-4444</td>
+                          </tr><tr>                                <td>123</td>
+                            <td>1</td>
+                            <td>123</td>
+                            <td>010-0000-0000</td>
+                          </tr><tr>                                <td>ㅊㅇㅇㅇㅇ</td>
+                            <td>2</td>
+                            <td>ㅇㅇㅇㅇㅇㅇ</td>
+                            <td>010-0000-0000</td>
+                          </tr><tr>                                <td>201</td>
+                            <td>3</td>
+                            <td>서울시 강남구 압구정동</td>
+                            <td>010-0000-0000</td>
+                          </tr><tr>                                <td>많이들</td>
+                            <td>2</td>
+                            <td>왔다</td>
+                            <td>010-000-0000</td>
+                          </tr><tr>                                <td></td>
+                            <td>1</td>
+                            <td></td>
+                            <td></td>
+                          </tr><tr>                                <td>fwfw</td>
+                            <td>1</td>
+                            <td>ff</td>
+                            <td>ff</td>
+                          </tr></tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
